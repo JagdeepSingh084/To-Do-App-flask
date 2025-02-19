@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 from datetime import datetime
@@ -24,7 +24,7 @@ class ToDo(db.Model):
     
 
 #default end point 
-@app.route('/home', methods=['GET','POST'])
+@app.route('/', methods=['GET','POST'])
 def add_todo():
     if request.method == 'POST':
         title = request.form['title']
@@ -39,10 +39,30 @@ def add_todo():
     return render_template('index.html', alltodos = alltodos)
     #return 'Hello World!'
 
-#Second end Point
-@app.route('/cart')
-def cart():
-    return "This is to show cart products"
+#Delete end Point
+@app.route('/delete/<int:sno>')
+def delete(sno):
+    todo = ToDo.query.filter_by(sno=sno).first()
+    db.session.delete(todo)
+    db.session.commit()
+    return redirect("/")
+
+#Update end Point
+@app.route('/update/<int:sno>', methods = ['GET', 'POST'])
+def update(sno):
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form['description']
+        todo = ToDo.query.filter_by(sno=sno).first()
+        todo.title = title
+        todo.description = description
+        db.session.add(todo)
+        db.session.commit()
+        print("Task updated Successfully!!!")
+        return redirect("/")
+    
+    todo = ToDo.query.filter_by(sno=sno).first()
+    return render_template('update.html', todo = todo)
 
 if __name__ == '__main__':
     
